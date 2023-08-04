@@ -1,10 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup, NonNullableFormBuilder } from '@angular/forms';
+import { Component, OnInit, effect, inject } from '@angular/core';
+import { NonNullableFormBuilder } from '@angular/forms';
 import { HotToastService } from '@ngneat/hot-toast';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { switchMap, tap } from 'rxjs';
-import { ProfileUser } from 'src/app/models/user';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { ImageUploadService } from 'src/app/services/image-upload.service';
+import { LoaderService } from 'src/app/services/loader.service';
 import { UsersService } from 'src/app/services/users.service';
 
 @UntilDestroy()
@@ -14,7 +13,7 @@ import { UsersService } from 'src/app/services/users.service';
   styleUrls: ['./profile.component.css'],
 })
 export class ProfileComponent implements OnInit {
-  user$ = this.usersService.currentUserProfile$;
+  user = this.usersService.currentUserProfile;
 
   profileForm = this.fb.group({
     uid: [''],
@@ -25,56 +24,55 @@ export class ProfileComponent implements OnInit {
     address: [''],
   });
 
+  loader = inject(LoaderService);
+
   constructor(
     private imageUploadService: ImageUploadService,
     private toast: HotToastService,
     private usersService: UsersService,
     private fb: NonNullableFormBuilder
-  ) {}
+  ) {
+    effect(() => {
+      this.profileForm.patchValue({ ...this.user() });
+    });
+  }
 
-  ngOnInit(): void {
-    this.usersService.currentUserProfile$
-      .pipe(untilDestroyed(this), tap(console.log))
-      .subscribe((user) => {
-        this.profileForm.patchValue({ ...user });
+  ngOnInit(): void {}
+
+  async uploadFile(event: any) {
+    this.loader.show('Uploading profile image...');
+
+    try {
+      const photoURL = await this.imageUploadService.uploadImage(
+        event.target.files[0],
+        `images/profile/${this.user()?.uid}`
+      );
+      await this.usersService.updateUser({
+        uid: this.user()?.uid ?? '',
+        photoURL,
       });
+      this.toast.success('Image uploaded successfully');
+    } catch (error: any) {
+      this.toast.error('There was an error in uploading the image');
+    } finally {
+      this.loader.hide();
+    }
   }
 
-  uploadFile(event: any, { uid }: ProfileUser) {
-    this.imageUploadService
-      .uploadImage(event.target.files[0], `images/profile/${uid}`)
-      .pipe(
-        this.toast.observe({
-          loading: 'Uploading profile image...',
-          success: 'Image uploaded successfully',
-          error: 'There was an error in uploading the image',
-        }),
-        switchMap((photoURL) =>
-          this.usersService.updateUser({
-            uid,
-            photoURL,
-          })
-        )
-      )
-      .subscribe();
-  }
-
-  saveProfile() {
+  async saveProfile() {
     const { uid, ...data } = this.profileForm.value;
 
     if (!uid) {
       return;
     }
-
-    this.usersService
-      .updateUser({ uid, ...data })
-      .pipe(
-        this.toast.observe({
-          loading: 'Saving profile data...',
-          success: 'Profile updated successfully',
-          error: 'There was an error in updating the profile',
-        })
-      )
-      .subscribe();
+    this.loader.show('Saving profile data...');
+    try {
+      await this.usersService.updateUser({ uid, ...data });
+      this.toast.success('Profile updated successfully');
+    } catch (error) {
+      this.toast.error('There was an error in updating the profile');
+    } finally {
+      this.loader.hide();
+    }
   }
 }

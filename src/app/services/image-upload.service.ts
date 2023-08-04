@@ -5,7 +5,6 @@ import {
   Storage,
   uploadBytes,
 } from '@angular/fire/storage';
-import { finalize, from, map, Observable, switchMap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -13,9 +12,9 @@ import { finalize, from, map, Observable, switchMap } from 'rxjs';
 export class ImageUploadService {
   constructor(private storage: Storage) {}
 
-  uploadImage(image: File, path: string): Observable<string> {
+  async uploadImage(image: File, path: string): Promise<string> {
     const storageRef = ref(this.storage, path);
-    const uploadTask = from(uploadBytes(storageRef, image));
-    return uploadTask.pipe(switchMap((result) => getDownloadURL(result.ref)));
+    const result = await uploadBytes(storageRef, image);
+    return await getDownloadURL(result.ref);
   }
 }

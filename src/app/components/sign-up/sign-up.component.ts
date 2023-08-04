@@ -1,8 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   AbstractControl,
-  FormControl,
-  FormGroup,
   NonNullableFormBuilder,
   ValidationErrors,
   ValidatorFn,
@@ -10,8 +8,8 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HotToastService } from '@ngneat/hot-toast';
-import { switchMap } from 'rxjs/operators';
 import { AuthService } from 'src/app/services/auth.service';
+import { LoaderService } from 'src/app/services/loader.service';
 import { UsersService } from 'src/app/services/users.service';
 
 export function passwordsMatchValidator(): ValidatorFn {
@@ -43,6 +41,8 @@ export class SignUpComponent implements OnInit {
     { validators: passwordsMatchValidator() }
   );
 
+  loader = inject(LoaderService);
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -69,27 +69,25 @@ export class SignUpComponent implements OnInit {
     return this.signUpForm.get('name');
   }
 
-  submit() {
+  async submit() {
     const { name, email, password } = this.signUpForm.value;
 
     if (!this.signUpForm.valid || !name || !password || !email) {
       return;
     }
 
-    this.authService
-      .signUp(email, password)
-      .pipe(
-        switchMap(({ user: { uid } }) =>
-          this.usersService.addUser({ uid, email, displayName: name })
-        ),
-        this.toast.observe({
-          success: 'Congrats! You are all signed up',
-          loading: 'Signing up...',
-          error: ({ message }) => `${message}`,
-        })
-      )
-      .subscribe(() => {
-        this.router.navigate(['/home']);
-      });
+    this.loader.show('Signing in...');
+    try {
+      const {
+        user: { uid },
+      } = await this.authService.signUp(email, password);
+      await this.usersService.addUser({ uid, email, displayName: name });
+      this.toast.success('Congrats! You are all signed up');
+      this.router.navigate(['/home']);
+    } catch (error: any) {
+      this.toast.error(error?.message);
+    } finally {
+      this.loader.hide();
+    }
   }
 }

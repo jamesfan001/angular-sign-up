@@ -9,7 +9,7 @@ import { UsersService } from './services/users.service';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  user$ = this.usersService.currentUserProfile$;
+  user = this.usersService.currentUserProfile;
 
   constructor(
     private authService: AuthService,
@@ -17,9 +17,8 @@ export class AppComponent {
     private router: Router
   ) {}
 
-  logout() {
-    this.authService.logout().subscribe(() => {
-      this.router.navigate(['/']);
-    });
+  async logout() {
+    await this.authService.logout();
+    this.router.navigate(['/']);
   }
 }
