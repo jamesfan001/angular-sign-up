@@ -2,13 +2,15 @@
   Sign Up Flow with Firebase
   <ng-container *ngIf="user(); else loginButton">
     <button mat-button [matMenuTriggerFor]="userMenu">
-      <img
-        width="30"
-        height="30"
-        class="profile-image-toolbar"
-        [src]="user()?.photoURL ?? 'assets/images/image-placeholder.png'"
-      />
-      {{ user()?.displayName }}
+      <span class="image-name"
+        ><img
+          width="30"
+          height="30"
+          class="profile-image-toolbar"
+          [src]="user()?.photoURL ?? 'assets/images/image-placeholder.png'"
+        />
+        <span>{{ user()?.displayName }}</span></span
+      >
       <mat-icon>expand_more</mat-icon>
     </button>
   </ng-container>

@@ -6,7 +6,12 @@ mat-toolbar {
   padding: 32px;
 }
 
-.profile-image-toolbar {
-  border-radius: 100%;
-  margin-right: 8px;
+.image-name {
+  > img {
+    border-radius: 100%;
+  }
+
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
