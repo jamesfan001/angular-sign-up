@@ -3,7 +3,7 @@ import { NonNullableFormBuilder } from '@angular/forms';
 import { HotToastService } from '@ngneat/hot-toast';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { ImageUploadService } from 'src/app/services/image-upload.service';
-import { LoaderService } from 'src/app/services/loader.service';
+import { ToastService } from 'src/app/services/toast.service';
 import { UsersService } from 'src/app/services/users.service';
 
 @UntilDestroy()
@@ -24,11 +24,10 @@ export class ProfileComponent implements OnInit {
     address: [''],
   });
 
-  loader = inject(LoaderService);
+  toastService = inject(ToastService);
 
   constructor(
     private imageUploadService: ImageUploadService,
-    private toast: HotToastService,
     private usersService: UsersService,
     private fb: NonNullableFormBuilder
   ) {
@@ -40,7 +39,7 @@ export class ProfileComponent implements OnInit {
   ngOnInit(): void {}
 
   async uploadFile(event: any) {
-    this.loader.show('Uploading profile image...');
+    this.toastService.showLoader('Uploading profile image...');
 
     try {
       const photoURL = await this.imageUploadService.uploadImage(
@@ -51,11 +50,11 @@ export class ProfileComponent implements OnInit {
         uid: this.user()?.uid ?? '',
         photoURL,
       });
-      this.toast.success('Image uploaded successfully');
+      this.toastService.showSuccess('Image uploaded successfully');
     } catch (error: any) {
-      this.toast.error('There was an error in uploading the image');
+      this.toastService.showError('There was an error in uploading the image');
     } finally {
-      this.loader.hide();
+      this.toastService.hideLoader();
     }
   }
 
@@ -65,14 +64,14 @@ export class ProfileComponent implements OnInit {
     if (!uid) {
       return;
     }
-    this.loader.show('Saving profile data...');
+    this.toastService.showLoader('Saving profile data...');
     try {
       await this.usersService.updateUser({ uid, ...data });
-      this.toast.success('Profile updated successfully');
+      this.toastService.showSuccess('Profile updated successfully');
     } catch (error) {
-      this.toast.error('There was an error in updating the profile');
+      this.toastService.showError('There was an error in updating the profile');
     } finally {
-      this.loader.hide();
+      this.toastService.hideLoader();
     }
   }
 }

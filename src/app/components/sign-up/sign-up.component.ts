@@ -9,7 +9,7 @@ import {
 import { Router } from '@angular/router';
 import { HotToastService } from '@ngneat/hot-toast';
 import { AuthService } from 'src/app/services/auth.service';
-import { LoaderService } from 'src/app/services/loader.service';
+import { ToastService } from 'src/app/services/toast.service';
 import { UsersService } from 'src/app/services/users.service';
 
 export function passwordsMatchValidator(): ValidatorFn {
@@ -41,12 +41,11 @@ export class SignUpComponent implements OnInit {
     { validators: passwordsMatchValidator() }
   );
 
-  loader = inject(LoaderService);
+  toastService = inject(ToastService);
 
   constructor(
     private authService: AuthService,
     private router: Router,
-    private toast: HotToastService,
     private usersService: UsersService,
     private fb: NonNullableFormBuilder
   ) {}
@@ -76,18 +75,18 @@ export class SignUpComponent implements OnInit {
       return;
     }
 
-    this.loader.show('Signing in...');
+    this.toastService.showLoader('Signing in...');
     try {
       const {
         user: { uid },
       } = await this.authService.signUp(email, password);
       await this.usersService.addUser({ uid, email, displayName: name });
-      this.toast.success('Congrats! You are all signed up');
+      this.toastService.showSuccess('Congrats! You are all signed up');
       this.router.navigate(['/home']);
     } catch (error: any) {
-      this.toast.error(error?.message);
+      this.toastService.showError(error?.message);
     } finally {
-      this.loader.hide();
+      this.toastService.hideLoader();
     }
   }
 }

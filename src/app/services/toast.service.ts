@@ -4,14 +4,22 @@ import { HotToastService } from '@ngneat/hot-toast';
 @Injectable({
   providedIn: 'root',
 })
-export class LoaderService {
+export class ToastService {
   toast = inject(HotToastService);
 
-  show(message: string) {
+  showLoader(message: string) {
     this.toast.loading(message, { id: 'loader' });
   }
 
-  hide() {
+  hideLoader() {
     this.toast.close('loader');
+  }
+
+  showSuccess(message: string) {
+    this.toast.success(message);
+  }
+
+  showError(message: string) {
+    this.toast.error(message);
   }
 }
