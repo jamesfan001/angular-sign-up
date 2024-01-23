@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component,VERSION } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from './services/auth.service';
 import { UsersService } from './services/users.service';
@@ -9,6 +9,7 @@ import { UsersService } from './services/users.service';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
+  version = VERSION.full;
   user$ = this.usersService.currentUserProfile$;
 
   constructor(
